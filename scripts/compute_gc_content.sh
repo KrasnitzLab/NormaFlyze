@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#$ -q "all.q@wigclust1[7-9]","all.q@wigclust2[0-4]"
+#$ -pe threads 1 
+#$ -l vf=8G 
+#$ -o /mnt/wigclust1/data/safe/kostic/output/gc.out -j y
+
+export PYTHON_PATH=/mnt/wigclust1/data/safe/kostic/python_scripts
+
+export DATA_PATH=/mnt/wigclust1/data/safe/kostic/bin_mapping
+
+export GENOME_PATH=/mnt/wigclust1/data/safe/kostic/hybrid_genome
+
+cd $DATA_PATH
+
+python $PYTHON_PATH/compute_gc_content.py  $GENOME_PATH $DATA_PATH/hybrid_bin_boundaries_sorted_150_500.txt
+python $PYTHON_PATH/compute_len_distrib.py $DATA_PATH/hybrid_bin_boundaries_sorted_150_500.txt $DATA_PATH/sorted_mappers_150_500.bed
+
+mv hybrid_genome_GCcontent07_28.txt range150_500_GC.txt
+mv hybrid_bin_fragment_stats07_28.txt range150_500_LEN.txt
+
+# output files:
+# hybrid_genome_GCcontent" + time.strftime("%m_%d") + ".txt"
+# "hybrid_bin_fragment_stats" + time.strftime("%m_%d") + ".txt"
