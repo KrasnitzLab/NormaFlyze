@@ -1,0 +1,3 @@
+chrY_dm	2
+chr1_dm	1
+chr2_dm	1
