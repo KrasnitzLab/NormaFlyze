@@ -7,7 +7,9 @@ import os
 
 def main():
 
+	#where the SAM files to be examined are found
 	project_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_2"
+	#where the qsub scripts will go
 	bash_dir = "/mnt/wigclust1/data/safe/kostic/scripts/aligners"
 
 	for f in os.listdir(project_dir):
@@ -31,22 +33,17 @@ def main():
 							'\ncd $DATA_PATH \n')
 			QSUB.write(paths)
 
-			command = ('$SAM_PATH/samtools sort ' + f + ' ' + fname + '_sorted\n'
-					 + '$PYTHON_PATH/compute_frag_gc_content.py <( $SAM_PATH/samtools view ' + fname +'_sorted.bam ) $GENOME_PATH ' + fname +'_GCadded.sam\n')
+			command = ('sort -k3,3 -k1,1 <( $SAM_PATH/samtools view ' + f +' ) > '+ fname +'_sorted.sam\n'
+					 + '$PYTHON_PATH/compute_frag_gc_content.py '+ fname + '_sorted.sam $GENOME_PATH ' + fname +'_GCadded.sam\n')
 
-			#QSUB.write(command)
-
-			#calc GC content of each fragment
-			keep = '$3,"\\t",$4,"\\t",$4+$9'
-			#command = ('$SAM_PATH/samtools view -f 0x23 ' + f + " | awk '{print " + keep + " }' > bedFile_" + fname + ".bed\n")
-							#+ 'python $PYTHON_PATH/compute_frag_gc_content.py bedFile_' + fname +'.bed $GENOME_PATH ' + fname + '_GCcontent.txt\n')
-			#QSUB.write(command)
+			QSUB.write(command)
 
 			#in count_and_dedup.py, change the input bin_boundaries file and the chromosome length file to the appropriate ones
-			command = ('python $PYTHON_PATH/count_and_dedup_GC.py <( $SAM_PATH/samtools view ' + f + ' ) ' + fname + '_GCcontent.txt'
-						' ' + fname + '_varbinGC_count.txt ' + fname + '_varbinGC_stats.txt\n'
-						+ 'rm bedFile_' + fname + '.bed\n' )
-			#QSUB.write(command)
+			command = ('python $PYTHON_PATH/count_and_dedup_GC.py ' + fname + '_GCadded.sam '
+						' ' + fname + '_varbinGC_count.txt ' + fname + '_varbinGC_stats.txt\n')
+			QSUB.write(command)
+
+			#"sort -k6,6 -k4,4 " + fname + "_varbinGC_count.txt"
 
 			QSUB.close()
 

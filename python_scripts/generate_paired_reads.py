@@ -1,23 +1,11 @@
 #!/usr/bin/env python
 
-#arguments: directory of files to be searched; length of reads to be found on either side of the string specified; the string to be found
-#output: 2 text files formatted as FASTQ paired end read files; 1 text file containing fragment lengths
-
 import re
 import sys
 import random
 import string
 import os
 import time
-
-# args: [seq]: a string representing a DNA sequence
-# return: the reverse complement of [seq]
-def get_rev_comp(seq):
-
-	base_pairs = {'A':'T', 'T':'A', 'C':'G', 'G':'C', 'N':'N'}
-	rev = "".join([base_pairs[base] for base in reversed(seq)])
-	return rev
-	#from: http://crazyhottommy.blogspot.com/2013/10/python-code-for-getting-reverse.html
 
 def main():
 
@@ -32,9 +20,10 @@ def main():
 	rev = open(outfile2, "w+")
 	fl = open(outfile3,"w+")
 
-	#length of string being searched
+	#length of restriction enzyme site being searched for
 	sl = len(site)
 
+	# for each fasta file (each chromosome) in the reference
 	for file in os.listdir(directory):
 		infile = open(os.path.abspath(directory + "/"+ file))
 
@@ -134,6 +123,17 @@ def main():
 	fow.close()
 	rev.close()
 	fl.close()
+
+
+
+# args: [seq]: a string representing a DNA sequence
+# return: the reverse complement of [seq]
+def get_rev_comp(seq):
+
+	base_pairs = {'A':'T', 'T':'A', 'C':'G', 'G':'C', 'N':'N'}
+	rev = "".join([base_pairs[base] for base in reversed(seq)])
+	return rev
+
 
 
 if __name__ == "__main__":

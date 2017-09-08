@@ -1,0 +1,76 @@
+Legend
+
+Fragment-based binning scheme for sgains
+_________________________________________________________________________________________________________________________________
+
+Summary: The following scripts are used to create a binning scheme based on fragments that come from pair-end sequencing reads.
+Using fragments rather than single reads provides more specific information that could be useful (fragment length, GC content etc).
+A hybrid reference genome is used here (human hg19 and fly dm6 chromosomes are both used).
+All bash scripts can be found in Normalflyze/scripts and all python scripts can be found in Normaflyze/python_scripts.
+
+
+1) make_hybrid_index.sh 										(location: Normaflyze/scripts)
+Summary: creates the Bowtie index for the hybrid reference genome
+*This step already exists in the pipeline, and I made no changes that are relevant to this pipeline (I just applied it to the human+fly hybrid genome).
+
+	a) hg19_mask_Y.py - **same as hg19.chrY.psr.py**			(Normaflyze/python_scripts)
+	input: 
+		- the .fa file of the hg19 Y chromosome
+		- the name of the modified file to be output
+	output:
+		- fasta file for a modified Y chromosome; pseudoautosomal regions removed
+
+	b) sep_drosoph_genome.py 									(Normaflyze/python_scripts)
+	inputs:
+		- a single large fasta file containing all chromosomes in a reference genome (fly in this case)
+		- the destination where the new files should be placed
+	output:
+		- several fasta files, separated by each chromosome in the input file.
+	c) Call Bowtie-build to create the index.
+
+
+2) generate_paired_reads.sh 									(Normaflyze/scripts)
+info: creates fastq files, formatted for pair-end read alignment. Applied to hybrid reference genome, using Nla3 cutsites and read lengths of 150.
+
+	a) generate_paired_reads.py 								(Normaflyze/python_scripts)
+	input:
+		- path to the reference genome being used. The directory must only contain .fa files, with one for each chromosome in the reference genome.
+		- the desired length of reads
+		- the cut site where reads start (Nla3 in this case)
+	output:
+		- 2 files formatted as FASTQ paired end read files
+		- 1 text file containing fragment lengths
+
+
+3) map_paired_fastq.sh 											(Normaflyze/scripts)
+Summary: calls Bowtie aligner on paired-end fastq files. Outputs SAM alignment
+
+
+4) get_bin_bounds.sh											(Normaflyze/scripts)
+Summary: creates 5000 bins for the reference genome. 
+Removes theoretical alignments for fragments that don't fall within a certain range (this is hardcoded in, but it came from distribution of real data).
+The result is a text file containing: chromosome, bin start pos, absolute bin start pos, chrom bin end, bin length, number of reads 
+
+	a) chrom_sizes.py
+	input:
+		- path to the reference genome
+		- the desired name of the output file
+	output:
+		- text file containing chrom names, absolute start positions, and lengths; sorted by absolute position, with all hg19 first then all dm6
+
+	b) get_goodzones.py
+	Note: "goodzones" aren't defined the same way as before. Here, each zone that is given in the output .bed is an individual fragment.
+	input:
+		- the SAM alignment file for the simulated paired-end reads
+	output:
+		- a .bed file containing info for every alignment: chromsome, absolute start position of alignment, and abs end position of alignment
+		- a text file containing each chromosome and the number of fragments that are mapped to that chromosome
+
+	c) sep_bin_boundaries.py
+	input:
+		- the txt file containg # of alignments per chromosome (from get_goodzones.py)
+		- the .bed file containing all alignments (from get_goodzones.py). Must be sorted in lexicographic order by chromosome name, then by position.
+		- the file containing the sizes of each chromosome.
+		- destination where the bin boundary output will be placed
+	output:
+		- a text file containing the bin boundaries for the hybrid genome: chromosome, chrom bin pos, absolute bin start pos, chrom bin end, bin length, number of reads mapping to the bin 

@@ -66,7 +66,7 @@ def main():
 	a = []
 	
 	# print chromarray
-	#done sorting chromarray
+	# done sorting chromarray
 
 	# Add the remaining reads to bincount of chromosomes in that range
 	remain = bincount - bincountUsed
@@ -99,9 +99,9 @@ def main():
 		numBins = 0
 		numreads = 0
 
-		print("current chrom: " + currChrom)
-		print("num bins needed: " + str(chroms2[currChrom][0]))
-		print("num reads per bin: " + str(chroms2[currChrom][1]))
+		# print("current chrom: " + currChrom)
+		# print("num bins needed: " + str(chroms2[currChrom][0]))
+		# print("num reads per bin: " + str(chroms2[currChrom][1]))
 
 		while numBins < chroms2[currChrom][0]:
 			binReads = chroms2[currChrom][1]
@@ -119,18 +119,18 @@ def main():
 				currChrom = currEntry.split()[0]
 				binEnd = int(currEntry.split()[2])
 				if not currChrom == chrom:
-					print("sonething wrong with counting")
+					print("something wrong with counting")
 				numReads += 1
 
-			print("done reading for this bin, num reads: " + str(numReads))
+			#print("done reading for this bin, num reads: " + str(numReads))
 
 			binStartAbspos = chromlen[currChrom][1] + binStart
 
 			#for the last bin: ends at end of chromosome
 			if numBins+1 == chroms2[currChrom][0]:
 				binEnd = chromlen[currChrom][0]
-				print("binEnd for last: "+ str(binEnd))
-				print("last segment " + currEntry)
+				# print("binEnd for last: "+ str(binEnd))
+				# print("last segment " + currEntry)
 
 			OUTFILE.write(currChrom)
 			OUTFILE.write("\t")

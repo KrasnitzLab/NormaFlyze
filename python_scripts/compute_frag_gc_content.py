@@ -38,8 +38,8 @@ def main():
 		pair_line = SAM.next()
 		pairrow = pair_line.rstrip().split("\t")
 
-		if not arow[0] == pairrow[0]:
-			print("not ordered correctly")
+		if not arow[0] == pairrow[0]: 
+			print("not a pair")
 
 		currChrom = arow[2]
 		fragStart = min(int(arow[3]), int(pairrow[3]))
@@ -59,12 +59,15 @@ def main():
 			y = x.upper()
 			prevChrom = currChrom
 
-		print("curr chrom: " + currChrom)
-		print(str(fragStart) +"\t"+ str(fragEnd+1))
-		gcContent = float(len(re.findall("[CG]", y[(fragStart):(fragEnd+1)]))) / float(len(re.findall("[ACGT]", y[(fragStart):(fragEnd+1)])))
-
+		fragment = y[(fragStart):(fragEnd+1)]
+		gcContent = float(len(re.findall("[CG]", fragment))) / float(len(re.findall("[ACGT]", y[(fragStart):(fragEnd+1)])))
+		nla3 = len(re.findall("\BCATG\B", fragment)) #+ len(re.findall("\BGTAC\B", fragment))
+		#len(re.findall("\ACATG", fragment)) + len(re.findall("CATG\Z", fragment)) + 
 		arow.append("GC:" + str(gcContent))
+		arow.append("NLA:" + str(nla3))
 		pairrow.append("GC:" + str(gcContent))
+		pairrow.append("NLA:" + str(nla3))
+
 
 		GC_content.write("\t".join(arow) + "\n")
 		GC_content.write("\t".join(pairrow) + "\n")
