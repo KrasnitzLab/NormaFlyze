@@ -5,12 +5,9 @@
 #$ -l vf=16G 
 #$ -o /mnt/wigclust1/data/safe/kostic/output/outputfile.out -j y
 
-#path to Bowtie software
 export BOWTIE_PATH=/mnt/wigclust1/data/safe/kostic/bowtie-1.2.1.1
-#path to folder where python scripts are held
 export PYTHON_PATH=/mnt/wigclust1/data/safe/kostic/python_scripts
-#path to the hybrid genome .fa files
-export DATA_PATH=/mnt/wigclust1/data/safe/kostic/hybrid_genome_2
+export DATA_PATH=/mnt/wigclust1/data/safe/kostic/hybrid_genome
 
 cd $DATA_PATH
 
@@ -31,4 +28,4 @@ python $PYTHON_PATH/sep_drosoph_genome.py <(gunzip -c dm6.fa.gz) $DATA_PATH
 cat *.fa > whole_hybrid_genome.fa
 
 #build the bowtie index
-$BOWTIE_PATH/bowtie-build -f whole_hybrid_genome.fa $BOWTIE_PATH/indexes/hybrid_indices_2
+$BOWTIE_PATH/bowtie-build -f whole_hybrid_genome.fa $BOWTIE_PATH/indexes/hybrid_indices
