@@ -24,8 +24,6 @@ def main():
 
 	#make 100 GC/len bins for each genomic bin
 	binCounts = []
-	gcbinCounts = []
-
 
 	binCounts = numpy.zeros((len(bins), len(GC_bins)))
 

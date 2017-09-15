@@ -8,10 +8,11 @@ import subprocess
 
 def main():
 
-	infilename = "/mnt/wigclust1/data/safe/kostic/python_scripts/nla3_hybrid_guide.txt"
-	output_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data"
+	#python_scripts/nla3_hybrid_guide.txt" for SNS_1
+	infilename = "/mnt/wigclust1/data/safe/kostic/SNS_data_2/nla3_hybrid_guide_02.txt"
+	output_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_2"
 	# change name to fit the fragment size range used
-	outfilename = "/mnt/wigclust1/data/safe/kostic/SNS_data/range125_600_uber_varbin_count_data.txt"
+	outfilename = "/mnt/wigclust1/data/safe/kostic/SNS_data_2/range125_600_uber_varbin_count_data.txt"
 
 	guide = fileToGuide(infilename)
 	ncells = len(guide["seq.unit.id"])

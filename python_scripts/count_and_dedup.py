@@ -43,8 +43,7 @@ def main():
 			break
 
 		thisChrom = arow[2]
-		thisChrompos = arow[3]
-		posEnd = int(pairrow[3]) + len(pairrow[9])
+		thisChrompos = min(arow[3],pairrow[3])
 		
 		#the flag
 		thisCode = int(arow[1])

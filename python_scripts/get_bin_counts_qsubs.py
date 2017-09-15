@@ -7,7 +7,7 @@ import os
 
 def main():
 
-	project_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_SKBR3"
+	project_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_2"
 	bash_dir = "/mnt/wigclust1/data/safe/kostic/scripts/aligners"
 
 	for f in os.listdir(project_dir):
@@ -23,7 +23,7 @@ def main():
 							'\n#$ -o /mnt/wigclust1/data/safe/kostic/output/count_''' + fname + '.out -j y \n')
 			QSUB.write(header)
 
-			paths = ('export DATA_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_SKBR3' 
+			paths = ('export DATA_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_2' 
 							'\nexport PYTHON_PATH=/mnt/wigclust1/data/safe/kostic/python_scripts'
 							'\nexport SAM_PATH=/mnt/wigclust1/data/software/samtools/samtools-0.1.19'
 							'\ncd $DATA_PATH \n')
