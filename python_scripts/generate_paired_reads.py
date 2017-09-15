@@ -67,7 +67,7 @@ def main():
 
 
 			if curr_loc - prev_loc <= length:
-				seg = y[prev_loc : curr_loc]
+				seg = y[prev_loc : curr_loc - sl]
 				fow.write("@" + header + "." + str(prev_loc) + "." + str(curr_loc) + "/1"+ "\n")
 				fow.write(seg + "\n")
 				fow.write("+" +"\n" + "B" * len(seg) + "\n")
@@ -96,7 +96,7 @@ def main():
 					break
 
 				if next_loc - curr_loc <= length:
-					seg = y[curr_loc : next_loc]
+					seg = y[curr_loc : next_loc - sl]
 					fow.write("@" + header + "." + str(curr_loc) + "." + str(next_loc) + "/1"+ "\n")
 					fow.write(seg + "\n")
 					fow.write("+" +"\n" + "B" * len(seg) + "\n")
