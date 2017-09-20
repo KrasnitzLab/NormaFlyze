@@ -64,7 +64,8 @@ The result is a text file containing: chromosome, bin start pos, absolute bin st
 	input:
 		- the SAM alignment file for the simulated paired-end reads
 	output:
-		- a .bed file containing info for every alignment: chromsome, absolute start position of alignment, and abs end position of alignment  (different format from old version)
+		- a .bed file containing info for every alignment: chromsome, absolute start position of alignment, and abs end position of alignment  
+		(different format from old version)
 		- a text file containing each chromosome and the number of fragments that are mapped to that chromosome (same as old version)
 
 	c) sep_bin_boundaries.py
@@ -74,7 +75,8 @@ The result is a text file containing: chromosome, bin start pos, absolute bin st
 		- the file containing the sizes of each chromosome.
 		- destination where the bin boundary output will be placed
 	output:
-		- a text file containing the bin boundaries for the hybrid genome: chromosome, chrom bin pos, absolute bin start pos, chrom bin end, bin length, number of reads mapping to the bin 
+		- a text file containing the bin boundaries for the hybrid genome: chromosome, chrom bin pos, absolute bin start pos, 
+		chrom bin end, bin length, number of reads mapping to the bin 
 
 ________________________________________________________________________________________________________________________________________________________________
 
@@ -82,7 +84,10 @@ Additions to the normalization procedure
 ________________________________________________________________________________________________________________________________________________________________
 
 5) normalize_GC_segment.R 					(Normaflyze/R_scripts)
-Summary: normalizes hybrid sequence data by mean bin GC-content and median fragment length in each bin. The relevant addition here is the noramlization based on fragment length by the function lowess.norm(). This is used specifically to normalize a hybrid human/fly genome. If just a human genome is being analyzed, the older lowess.gc() function can be used again, but with the length information as the first parameter.
+Summary: normalizes hybrid sequence data by mean bin GC-content and median fragment length in each bin. 
+The relevant addition here is the noramlization based on fragment length by the function lowess.norm(). 
+This is used specifically to normalize a hybrid human/fly genome. If just a human genome is being analyzed, 
+the older lowess.gc() function can be used again, but with the length information as the first parameter.
 input:
 	- requires correctly formatted "uber" data file containing bin counts, for all the samples being analyzed (same as before)
 	- file specifying mean GC content of each bin (same)
