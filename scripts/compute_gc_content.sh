@@ -13,12 +13,12 @@ export GENOME_PATH=/mnt/wigclust1/data/safe/kostic/hybrid_genome
 
 cd $DATA_PATH
 
-python $PYTHON_PATH/compute_gc_content.py  $GENOME_PATH $DATA_PATH/hybrid_bin_boundaries_sorted_150_500.txt
-python $PYTHON_PATH/compute_len_distrib.py $DATA_PATH/hybrid_bin_boundaries_sorted_150_500.txt $DATA_PATH/sorted_mappers_150_500.bed
+python $PYTHON_PATH/compute_gc_content.py  $GENOME_PATH $DATA_PATH/hybrid_bin_boundaries_sorted_125_600.txt
+python $PYTHON_PATH/compute_len_distrib.py $DATA_PATH/hybrid_bin_boundaries_sorted_125_600.txt $DATA_PATH/sorted_mappers_125_600.bed
 
-mv hybrid_genome_GCcontent07_28.txt range150_500_GC.txt
-mv hybrid_bin_fragment_stats07_28.txt range150_500_LEN.txt
+mv hybrid_genome_GCcontent07_28.txt range125_600_GC.txt
+mv hybrid_bin_fragment_stats07_28.txt range125_600_LEN.txt
 
-# output files:
+# original names of output files:
 # hybrid_genome_GCcontent" + time.strftime("%m_%d") + ".txt"
 # "hybrid_bin_fragment_stats" + time.strftime("%m_%d") + ".txt"
