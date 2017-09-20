@@ -109,6 +109,8 @@ Summary: generates the files detailing GC content and median fragment lengths fo
 ________________________________________________
 
 Some useful files for understanding formatting: all are truncated on git due to large size
+
+located in Normaflyze/bin_mapping
 ________________________________________________
 
 7) sorted_mappers_125_600_TRUNC.bed
