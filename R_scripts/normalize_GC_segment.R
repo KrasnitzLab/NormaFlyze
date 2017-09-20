@@ -11,7 +11,7 @@ lowess.norm <- function(jtkx, jtky, partition) {
         loweights<-c(rep(1,partition),rep(0,5000-partition))
 		pseudo<-0.001
 		logbad <-log(jtky+pseudo)
-		lfit<-loess(logbad~jtkx,span=0.05,degree=1)
+		lfit<-loess(logbad~jtkx,weights=loweights,span=0.05,degree=1)
 		norm_ratio<-exp(lfit$residuals)
 		return(norm_ratio)
 }
