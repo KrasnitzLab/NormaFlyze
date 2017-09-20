@@ -1,4 +1,5 @@
 Legend
+_________________________________________________________________________________________________________________________________
 
 Fragment-based binning scheme for sgains
 _________________________________________________________________________________________________________________________________
@@ -74,3 +75,32 @@ The result is a text file containing: chromosome, bin start pos, absolute bin st
 		- destination where the bin boundary output will be placed
 	output:
 		- a text file containing the bin boundaries for the hybrid genome: chromosome, chrom bin pos, absolute bin start pos, chrom bin end, bin length, number of reads mapping to the bin 
+
+________________________________________________________________________________________________________________________________________________________________
+
+Additions to the normalization procedure
+________________________________________________________________________________________________________________________________________________________________
+
+1) normalize_GC_segment.R 					(Normaflyze/R_scripts)
+Summary: normalizes hybrid sequence data by mean bin GC-content and median fragment length in each bin. The relevant addition here is the noramlization based on fragment length by the function lowess.norm(). This is used specifically to normalize a hybrid human/fly genome. If just a human genome is being analyzed, the older lowess.gc() function can be used again, but with the length information as the first parameter.
+input:
+	- requires correctly formatted "uber" data file containing bin counts, for all the samples being analyzed (same as before)
+	- file specifying mean GC content of each bin (same)
+	- file specifying median fragment length for each bin (new)
+
+2) compute_gc_content.sh 				(Normaflyze/scripts)
+Summary: generates the files detailing GC content and median fragment lengths for bins.
+	a) compute_gc_content.py 			(Normaflyze/python_scripts)
+	Note: nothing significant was changed here from previous versions
+	input:
+		- directory where the genome fasta files are held
+		- the sorted bin boundaries file
+	output:
+		- text file containin bin boundaries as well as average GC content for each bin
+
+	b) compute_len_distrib.py
+	input:
+		-the sorted bin boundaries file
+		- the .bed file containing all the alignments
+	output:
+		- file detailing median fragment length for each bin, which is used as an input for (1).
