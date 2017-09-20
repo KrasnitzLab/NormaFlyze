@@ -64,8 +64,8 @@ The result is a text file containing: chromosome, bin start pos, absolute bin st
 	input:
 		- the SAM alignment file for the simulated paired-end reads
 	output:
-		- a .bed file containing info for every alignment: chromsome, absolute start position of alignment, and abs end position of alignment
-		- a text file containing each chromosome and the number of fragments that are mapped to that chromosome
+		- a .bed file containing info for every alignment: chromsome, absolute start position of alignment, and abs end position of alignment  (different format from old version)
+		- a text file containing each chromosome and the number of fragments that are mapped to that chromosome (same as old version)
 
 	c) sep_bin_boundaries.py
 	input:
@@ -81,14 +81,14 @@ ________________________________________________________________________________
 Additions to the normalization procedure
 ________________________________________________________________________________________________________________________________________________________________
 
-1) normalize_GC_segment.R 					(Normaflyze/R_scripts)
+5) normalize_GC_segment.R 					(Normaflyze/R_scripts)
 Summary: normalizes hybrid sequence data by mean bin GC-content and median fragment length in each bin. The relevant addition here is the noramlization based on fragment length by the function lowess.norm(). This is used specifically to normalize a hybrid human/fly genome. If just a human genome is being analyzed, the older lowess.gc() function can be used again, but with the length information as the first parameter.
 input:
 	- requires correctly formatted "uber" data file containing bin counts, for all the samples being analyzed (same as before)
 	- file specifying mean GC content of each bin (same)
 	- file specifying median fragment length for each bin (new)
 
-2) compute_gc_content.sh 				(Normaflyze/scripts)
+6) compute_gc_content.sh 				(Normaflyze/scripts)
 Summary: generates the files detailing GC content and median fragment lengths for bins.
 	a) compute_gc_content.py 			(Normaflyze/python_scripts)
 	Note: nothing significant was changed here from previous versions
@@ -101,6 +101,27 @@ Summary: generates the files detailing GC content and median fragment lengths fo
 	b) compute_len_distrib.py
 	input:
 		-the sorted bin boundaries file
-		- the .bed file containing all the alignments
+		- the .bed file containing all the alignments (from get_goodzones)
 	output:
-		- file detailing median fragment length for each bin, which is used as an input for (1).
+		- file detailing median fragment length for each bin, which is used as an input for (5).
+
+
+________________________________________________
+
+Some useful files for understanding formatting: all are truncated on git due to large size
+________________________________________________
+
+7) sorted_mappers_125_600_TRUNC.bed
+info: contains the chromosome and start and end positions of each alignment
+output from (4b)
+input to (6b) and (4c)
+
+8) range125_600_LEN_TRUNC.txt
+info: contains bin boundary info as well as the median length of each bin
+output from (6b)
+input to (5)
+
+9) range125_600_GC_TRUNC.txt
+info: contains bin boundary info as well as the GC content of each bin
+output from (6a)
+input to (5)
