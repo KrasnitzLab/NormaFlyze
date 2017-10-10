@@ -13,8 +13,14 @@ def main():
 	statfilename = sys.argv[3]
 
 	chrominfo = fileToDictionary("/mnt/wigclust1/data/safe/kostic/bin_mapping/chrom_sizes_hg_dm_combined_consecutive.txt", 0)
-	bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/hybrid_bin_boundaries_sorted_125_600.txt", 0)
-	GC_bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/GC_bin_bounds_125_600.txt", 0)
+	bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/hg19_bin_boundaries_sorted_125_600.txt",0)
+		#hybrid_bin_boundaries_sorted_125_600.txt", 0)
+		#hg19_bin_boundaries_sorted_125_600.txt", 0)
+	GC_bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/10by10quantiles.txt",0)
+		#GC_bin_bounds_125_600_hg19.txt", 0)
+		#GC_bin_bounds_5by5_125_600.txt", 0)
+		#GC_bin_bounds_125_600.txt", 0) 
+		#GC_bin_bounds_125_600_hg19.txt", 0)
 
 	INFILE = open(infilename, "r")
 	OUTFILE = open(outfilename, "w")
@@ -25,7 +31,8 @@ def main():
 	#make 100 GC/len bins for each genomic bin
 	binCounts = []
 
-	binCounts = numpy.zeros((len(bins), len(GC_bins)))
+	#binCounts = numpy.zeros((len(bins), len(GC_bins)))
+	binCounts = numpy.zeros((len(bins), 10, 10))
 
 	#the absolute start positions of bins on the chromosomes
 	binStarts = []
@@ -33,8 +40,13 @@ def main():
 		binStarts.append(long(bins[i][2]))
 
 	lenStarts = []
+	gcStarts = []
 	for i in range(len(GC_bins)):
-		lenStarts.append( float(GC_bins[i][0]) + float(GC_bins[i][2]) )
+		#lenStarts.append( float(GC_bins[i][0]) + float(GC_bins[i][2]) )
+		lenStarts.append(float(GC_bins[i][2]))
+		gcStarts.append(float(GC_bins[i][0]))
+		#print(float(GC_bins[i][0]))
+	lenStarts.sort()
 
 	counter = 0
 	dups = 0
@@ -76,6 +88,7 @@ def main():
 		#the flag
 		thisCode = int(arow[1])
 		code2 = int(pairrow[1])
+		thisNLA = 0
 
 		thisTag = ""
 		thisGC = 0.0
@@ -117,14 +130,20 @@ def main():
 		
 		#get index where thisAbspos would fit in the binStarts array
 		indexGenome = bisect.bisect(binStarts, thisAbspos)
+		#print("index genome" + str(indexGenome))
 		#for each alignment, get lenght of frag from SAM format
 		fl = abs(int(arow[8]))
-		lenIndex = bisect.bisect(lenStarts, float(thisGC) + float(fl))
-		binCounts[indexGenome-1][lenIndex-1] += 1
+		#lenIndex = bisect.bisect(lenStarts, float(thisGC) + float(fl))
+
+		lenIndex = bisect.bisect(lenStarts, float(fl))
+		gcIndex = bisect.bisect(gcStarts, float(thisGC))
+
+		#print("gclen index" + str(lenIndex))
+		binCounts[indexGenome-1][lenIndex-1][gcIndex-1] += 1
 
 
 	###### end for line in the sam file
-	print("starting to add to output file")
+	#print("starting to add to output file")
 	for p in range(len(binCounts)):
 		for q in range(len(binCounts[p])):
 			#chrom name, start position of genomic bin, absolute start position of genome, start GC, end GC, start len, end len, bin count for GC/len, total count for genomic bin
@@ -185,7 +204,7 @@ def fileToArray(inputFile, skipFirst):
 		input.readline()
 
 	for x in input:
-		arow = x.rstrip().split("\t")
+		arow = x.rstrip().split()
 		ra.append(arow)
 		
 	input.close()
