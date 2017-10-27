@@ -1,4 +1,4 @@
-options(keep.source=F)
+
 library("DNAcopy", lib.loc="/mnt/wigclust5/data/safe/kendall/DNAcopy_1.50.1")
 # for each gc/len bin i, sum up bin counts across all the genomic bins b --> ni
 # for each gc/len bin i, find pi
@@ -11,9 +11,10 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 	genomic_bins <- nrow(bins)
 	quantiles <- nrow(thisUber) / genomic_bins
 
-	#cat("num genomic and quantile bins: ", genomic_bins, quantiles, "\n")
-
 	thisUberSeg <- data.frame(matrix(0, nrow = genomic_bins, ncol = ncol(thisUber)))
+
+	#holds the difference between seg and non seg
+	mn_diff <- thisUber[1:2,]
 
 	#rep(seq_len(nrow(bins)), each=quantiles),]
 	#bins.expanded <- bins[rep(seq_len(nrow(bins)), each=quantiles),]
@@ -31,19 +32,13 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 	chrom.numeric[which(bins[,1] == "chrY_dm")] <- "31"
 	chrom.numeric <- as.numeric(chrom.numeric)
 
-	#print (chrom.numeric)
-
 	abspos.col <- bins$bin.start.abspos
 	bin.start.pos <- bins$bin.start.chrompos
 
 	end_hg_auto <- quantiles * max(which(chrom.numeric=="22"))
+	start_dm <- min(which(chrom.numeric== "25"))
 
-	#print(abspos.col)
-	#print(bin.start.pos)
-
-	#print(bins.expanded[1:200,])
-
-	for (i in 1:ncol(thisUber)){
+	for (i in 1){#:ncol(thisUber)){
 		sample.name <- dimnames(thisUber)[[2]][i]
 		cat(i, dimnames(thisUber)[[2]][i], "\n")
 		P_j <- 1/quantiles
@@ -56,14 +51,23 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 			#find pj using only human data
 			bins_j <- thisUber[seq(j, end_hg_auto, quantiles), i]
 			nj <- sum(bins_j)
-			pj <- (nj + 1)/ (sum(thisUber[1: end_hg_auto,i]) + 100)
-			#cat("pj: ", pj, "\n")
-			pj_list[j] <- pj
-			if(pj == 0){
-				cat("pj 0\n")
+			if(nj >= 200){
+				pj <- (nj + 1)/ (sum(thisUber[1: end_hg_auto,i]) + 2)
+				pj_list[j] <- pj	
 			}
-			#cat("bin j:", j, "n_j:", nj, "p_j: ", pj, "\n")
 		}
+
+		nj_zero <- which(pj_list == 0)
+		end <- nrow(thisUber)
+		remove <- c()
+		for(i in 1:length(nj_zero)){
+			remove <- c(remove, seq(nj_zero[i], end, quantiles))
+		}
+		cat("remove these:", length(remove), "\n")
+		thisUberEdit <- thisUber[-remove,i]
+		quantiles <- length(nj_zero)
+		cat("quantis: ", quantiles, "len uber", length(thisUberEdit), "\n")
+		#print(sum(thisUber[1: end_hg_auto,i]))
 
 		#for each genomic bin (so each set of 100 consecutive rows)
 		for (b in 1:genomic_bins){
@@ -75,17 +79,13 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 			Nb <- sum(P_j * n_jb / pj_list)
 			if(is.na(Nb)){
 				cat("na in nratio\n")
-		}
+			}
 			N_counts[b] <- Nb
 		}
 
 		N_ratio <- N_counts / mean(N_counts)
-
-
 		cat("Ncounts__________________________________________\n")
-		print(N_ratio)
-		#cat("start pos's")
-		#print(bin.start.pos)
+		val <- end_hg_auto/quantiles
 
 		set.seed(25) 
 		CNA.object <- CNA(log(N_ratio), chrom.numeric, bin.start.pos, data.type="logratio", sampleid=dimnames(thisUber)[[2]][i]) 
@@ -95,7 +95,7 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 
 		#thisShort[is.na(thisShort)] <- 0
 
-		print(segment.smoothed.CNA.object)
+		#print(segment.smoothed.CNA.object)
 
 		m <- matrix(data=0, nrow=genomic_bins, ncol=1)	
 		prevEnd <- 0
@@ -107,12 +107,15 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 			prevEnd = thisEnd
 			summ <- summ + thisShort$num.mark[j]
 		}
-		cat("sum of marks: ", summ, "\n")
+		#cat("sum of marks: ", summ, "\n")
 		thisUberSeg[, i] <- m[, 1]
-		cat("uberseg________________________________\n")
-		#print(thisUberSeg[, i])
+		diff <- abs(thisUberSeg[, i] - N_ratio)
 
-		cat("thisUberseg stats: ", min(thisUberSeg[, i]), max(thisUberSeg[, i]), mean(thisUberSeg[, i]), "\n")
+		#cat("this is mn diff\n")
+		mn_diff[1,i] <- median(diff)
+		#print(mn_diff)
+
+		#cat("thisUberseg stats: ", min(thisUberSeg[, i]), max(thisUberSeg[, i]), mean(thisUberSeg[, i]), "\n")
 
 		chr <- chrom.numeric
 		chr.shift <- c(chr[-1], chr[length(chr)])
@@ -139,13 +142,13 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 ###################
 
 
-		thisGrid <- seq(0.5, 2.5, by=0.05)
-		thisOuter <- thisUberSeg[, i] %o% thisGrid
+		thisGrid <- seq(0.5, 5.5, by=0.05)
+		thisOuter <- thisUberSeg[1:end_hg_auto, i] %o% thisGrid
 		thisOuterRound <- round(thisOuter)
 		thisOuterDiff <- (thisOuter - thisOuterRound) ^ 2
 		thisOuterColsums <- colSums(thisOuterDiff, na.rm = FALSE, dims = 1)
 		thisMultiplier <- thisGrid[which.min(thisOuterColsums)]
-		cat("multiplier", thisMultiplier, "\n")
+		#cat("multiplier", thisMultiplier, "\n")
 		thisError <- min(thisOuterColsums)
 
 		thisLowratioQuantal <- t(N_ratio)# * thisMultiplier)
@@ -156,7 +159,8 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 
 		hlines <- c(0, 1, 2, 3, 4, 5, 6)
 
-		# png(paste(outdir, "/", sample.name, ".5k.quant.nomult.png", sep=""), height=800, width=1200)
+		# png(paste(outdir, "/", sample.name, ".10by5.quantile.png", sep=""), height=800, width=1200)
+		# #.5k.quant.nomult.png
 		# plot(x=abspos.col, y=N_ratio, ylim=c(0,10), main=paste(sample.name, ""), xaxt="n", xlab="Genome Position Gb", ylab="Ratio", col="#CCCCCC")
 		# axis(1, at=x.at, labels=x.labels)
 		# lines(x=abspos.col, y=N_ratio, col="#CCCCCC")
@@ -169,7 +173,7 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 		
 		cat("len: ", length(thisLowratioQuantal), length(abspos.col))
 
-		png(paste(outdir, "/", sample.name, ".5k.quantile.norm.png", sep=""), height=800, width=1500)
+		png(paste(outdir, "/", sample.name, ".10by10.quantile.png", sep=""), height=800, width=1500)
 		plot(x=abspos.col, y=thisLowratioQuantal, ylim=c(0,10), main=paste(sample.name, ""), xaxt="n", xlab="Genome Position Gb", ylab="Ratio", col="#CCCCCC")
 		axis(1, at=x.at, labels=x.labels)
 		lines(x=abspos.col, y=thisLowratioQuantal, col="#CCCCCC")
@@ -180,12 +184,13 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 		mtext(chr.text, at = chr.at)
 		dev.off()
 	}
-
+	#print(mean(mn_diff[1,]))
 }
 
+uber_counts_nla3_quantile <- read.table("/mnt/wigclust1/data/safe/kostic/SNS_data_2/GClen_uber_10by10_count_data.txt", sep="\t", header=T, as.is=T, stringsAsFactors=F)
+# 10 by 10 quantile uber : GClen_uber_varbin_count_data.txt
+# simulated uber : sim_hybrid_quantile_uber.txt
+# 5 by 5 quantile uber: GClen_uber_5by5_count_data.txt
 
-
-a.varbin <- read.table("/mnt/wigclust1/data/safe/kostic/SNS_data_2/b15_5_varbinGC_count.txt", sep="\t", header=F, as.is=T, stringsAsFactors=F)
-uber_counts_nla3_quantile <- read.table("/mnt/wigclust1/data/safe/kostic/SNS_data_2/GClen_uber_varbin_count_data_sim.txt", sep="\t", header=T, as.is=T, stringsAsFactors=F)
 uber_counts_mat <- as.matrix(uber_counts_nla3_quantile)
 nla3.88.results <- segment_uber_hg19dm6_quantile(outdir="/mnt/wigclust1/data/safe/kostic/SNS_data_2", indir="", varbin="/mnt/wigclust1/data/safe/kostic/bin_mapping/range125_600_GC.txt", thisUber=uber_counts_mat, alpha=0.02, nperm=1000, undo.SD=0.5, min.width=3)
