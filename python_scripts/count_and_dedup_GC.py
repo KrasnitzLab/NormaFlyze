@@ -13,26 +13,25 @@ def main():
 	statfilename = sys.argv[3]
 
 	chrominfo = fileToDictionary("/mnt/wigclust1/data/safe/kostic/bin_mapping/chrom_sizes_hg_dm_combined_consecutive.txt", 0)
-	bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/hg19_bin_boundaries_sorted_125_600.txt",0)
+	bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/hybrid_bin_boundaries_sorted_125_600.txt", 0)
 		#hybrid_bin_boundaries_sorted_125_600.txt", 0)
 		#hg19_bin_boundaries_sorted_125_600.txt", 0)
-	GC_bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/10by10quantiles.txt",0)
+	GC_bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/GC_bin_bounds_125_600.txt", 0)
+		#10by10quantiles.txt",0)
 		#GC_bin_bounds_125_600_hg19.txt", 0)
-		#GC_bin_bounds_5by5_125_600.txt", 0)
 		#GC_bin_bounds_125_600.txt", 0) 
-		#GC_bin_bounds_125_600_hg19.txt", 0)
 
 	INFILE = open(infilename, "r")
 	OUTFILE = open(outfilename, "w")
 	STATFILE = open(statfilename, "w")
 
+	GCquantiles = 10
+	lenquantiles = 10
+
 	print infilename
 
-	#make 100 GC/len bins for each genomic bin
 	binCounts = []
-
-	#binCounts = numpy.zeros((len(bins), len(GC_bins)))
-	binCounts = numpy.zeros((len(bins), 10, 10))
+	binCounts = numpy.zeros((len(bins), GCquantiles, lenquantiles))
 
 	#the absolute start positions of bins on the chromosomes
 	binStarts = []
@@ -41,15 +40,16 @@ def main():
 
 	lenStarts = []
 	gcStarts = []
-	for i in range(len(GC_bins)):
-		#lenStarts.append( float(GC_bins[i][0]) + float(GC_bins[i][2]) )
+	for i in range(GCquantiles):
+		gcStarts.append(float(GC_bins[GCquantiles*i][0]))
+	gcStarts[0] = 0
+	for i in range(lenquantiles):
 		lenStarts.append(float(GC_bins[i][2]))
-		gcStarts.append(float(GC_bins[i][0]))
-		#print(float(GC_bins[i][0]))
-	lenStarts.sort()
 
 	counter = 0
 	dups = 0
+	notinrange = 0
+	notRange = []
 	totalReads = 0
 	flycount = 0
 	flyNLA = 0
@@ -113,6 +113,13 @@ def main():
 		except KeyError:
 			prevChromPosits[thisChrom] = []
 
+		#for each alignment, get lenght of frag from SAM format
+		fl = abs(int(arow[8]))
+		if fl < 125 or fl > 600:
+			notinrange += 1
+			notRange.append(fl)
+			continue
+
 		counter += 1
 
 		if (thisChrom.find("_dm") > -1):
@@ -130,40 +137,37 @@ def main():
 		
 		#get index where thisAbspos would fit in the binStarts array
 		indexGenome = bisect.bisect(binStarts, thisAbspos)
-		#print("index genome" + str(indexGenome))
-		#for each alignment, get lenght of frag from SAM format
-		fl = abs(int(arow[8]))
-		#lenIndex = bisect.bisect(lenStarts, float(thisGC) + float(fl))
 
 		lenIndex = bisect.bisect(lenStarts, float(fl))
 		gcIndex = bisect.bisect(gcStarts, float(thisGC))
 
-		#print("gclen index" + str(lenIndex))
-		binCounts[indexGenome-1][lenIndex-1][gcIndex-1] += 1
-
+		binCounts[indexGenome-1][gcIndex-1][lenIndex-1] += 1
 
 	###### end for line in the sam file
 	#print("starting to add to output file")
 	for p in range(len(binCounts)):
 		for q in range(len(binCounts[p])):
-			#chrom name, start position of genomic bin, absolute start position of genome, start GC, end GC, start len, end len, bin count for GC/len, total count for genomic bin
-			OUTFILE.write("\t".join(bins[p][0:3]))
-			OUTFILE.write("\t")
-			#gc content min, gc max, len min, len max
-			OUTFILE.write("\t".join(GC_bins[q][0:4]))
-			OUTFILE.write("\t")
-			OUTFILE.write(str(binCounts[p][q]))
-			OUTFILE.write("\t")
-			OUTFILE.write(str(sum(binCounts[p])))
-			OUTFILE.write("\n")
+			for r in range(len(binCounts[p][q])):
+				#chrom name, start position of genomic bin, absolute start position of genome, start GC, end GC, start len, end len, bin count for GC/len, total count for genomic bin
+				OUTFILE.write("\t".join(bins[p][0:3]))
+				OUTFILE.write("\t")
+				#gc content min, gc max, len min, len max
+				OUTFILE.write("\t".join(GC_bins[q*lenquantiles + r][0:4]))
+				OUTFILE.write("\t")
+				OUTFILE.write(str(binCounts[p][q][r]))
+				OUTFILE.write("\t")
+				OUTFILE.write(str(sum(sum(binCounts[p]))))
+				OUTFILE.write("\n")
 
 	
-	STATFILE.write("TotalReads\tDupsRemoved\tReadsKept\tFlyNLAEff\tMeanHumanNLAEff\n")
+	STATFILE.write("TotalReads\tDupsRemoved\tReadsKept\tReadsOutofRange\tFlyNLAEff\tMeanHumanNLAEff\n")
 	STATFILE.write(str(totalReads))
 	STATFILE.write("\t")
 	STATFILE.write(str(dups))
 	STATFILE.write("\t")
 	STATFILE.write(str(counter))
+	STATFILE.write("\t")
+	STATFILE.write(str(notinrange))
 	STATFILE.write("\t")
 	#print("final fly: " + str(float(flyNLA)/float(flycount)))
 	STATFILE.write(str(float(flycount-1)/float(flyNLA + flycount - 1)))

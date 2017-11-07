@@ -9,10 +9,12 @@ import subprocess
 def main():
 
 	#python_scripts/nla3_hybrid_guide.txt" for SNS_1
-	infilename = "/mnt/wigclust1/data/safe/kostic/SNS_data_2/nla3_hybrid_guide_02.txt"
-	output_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_2"
+	infilename = "/mnt/wigclust1/data/safe/kostic/SNS_data_2/hg19_only/nla3_hg19_guide_02.txt"
+	#nla3_hybrid_guide_02.txt"
+	output_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_2/hg19_only"
 	# change name to fit the fragment size range used
-	outfilename = "/mnt/wigclust1/data/safe/kostic/SNS_data_2/range125_600_uber_varbin_count_data.txt"
+	outfilename = "/mnt/wigclust1/data/safe/kostic/SNS_data_2/hg19_only/hg19_uber_varbin_count_data.txt"
+	#hg19_only/hg19_uber_varbin_count_data.txt"
 
 	guide = fileToGuide(infilename)
 	ncells = len(guide["seq.unit.id"])
@@ -27,7 +29,7 @@ def main():
 
 		samples.append(guide["seq.unit.id"][i])
 		uber[guide["seq.unit.id"][i]] = []
-		thisFilename = output_dir + "/" + guide["barcode.group"][i] + "_" + guide["barcode"][i] + "_varbin_count.txt"
+		thisFilename = output_dir + "/" + guide["barcode.group"][i] + "_" + guide["barcode"][i] + "_hg19_count.txt"
 
 		print thisFilename
 

@@ -6,7 +6,6 @@ from operator import itemgetter
 import bisect
 import numpy
 
-
 def main():
 
 	GCbincount = 10
@@ -28,8 +27,9 @@ def main():
 
 	#sort the list by GC and separate into 10 bins
 	gc_list = sorted(f_list, key = itemgetter(1))
+	print(gc_list)
 	gc_bins = numpy.array_split(gc_list, GCbincount)
-	print("gc_bin number: " + str(len(gc_bins)))
+	#print("gc_bin number: " + str(len(gc_bins)))
 
 	#sort GC bins by fragment length and separate into 10 sub-bins
 	lenB = int(gcB / LENbincount)

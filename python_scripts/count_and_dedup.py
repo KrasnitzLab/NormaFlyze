@@ -11,7 +11,8 @@ def main():
 	statfilename = sys.argv[3]
 
 	chrominfo = fileToDictionary("/mnt/wigclust1/data/safe/kostic/bin_mapping/chrom_sizes_hg_dm_combined_consecutive.txt", 0)
-	bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/hybrid_bin_boundaries_sorted_125_600.txt", 0)
+	bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/hg19_bin_boundaries_sorted_125_600.txt", 0)
+		#hybrid_bin_boundaries_sorted_125_600.txt", 0)
 
 	INFILE = open(infilename, "r")
 	OUTFILE = open(outfilename, "w")
@@ -91,6 +92,7 @@ def main():
 		#increment the bin count of the bin where this read would fall
 		indexDown = bisect.bisect(binStarts, thisAbspos)
 		binCounts[indexDown-1] += 1
+
 
 		#if the paired other side falls out of the bins, keep track - make a counter and put in stats
 

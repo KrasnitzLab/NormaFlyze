@@ -7,7 +7,7 @@ import os
 
 def main():
 
-	project_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_SKBR3"
+	project_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_2"
 	bash_dir = "/mnt/wigclust1/data/safe/kostic/scripts/aligners"
 
 	for subdir, dirs, files in os.walk(project_dir):
@@ -30,8 +30,8 @@ def main():
 				QSUB.write(header)
 
 				paths = ('export BOWTIE_PATH=/mnt/wigclust1/data/safe/kostic/bowtie-1.2.1.1' 
-							'\nexport DATA_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_SKBR3/' + sub + ''
-							'\nexport RESULTS_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_SKBR3/' 
+							'\nexport DATA_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_2/' + sub + ''
+							'\nexport RESULTS_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_2/' 
 							'\nexport BOWTIE_INDEXES=$BOWTIE_PATH/indexes'
 							'\nexport PYTHON_PATH=/mnt/wigclust1/data/safe/kostic/python_scripts'
 							'\ncd $DATA_PATH \n')
@@ -43,7 +43,6 @@ def main():
 							'gunzip -c ' + pair + ' | python $PYTHON_PATH/remove_seq_adapter.py GATCGGAAGAGCGG' + ' > ' + unzipped2 + '\n')
 				QSUB.write(command)
 
-				#command = '$BOWTIE_PATH/bowtie -q -S -t -n 2 -e 200 --chunkmbs 256 -3 0 -5 16 -m 1 --best --strata hybrid_index ' + unzipped1 + ' $RESULTS_PATH/' + samfile + '\n'
 				command = ('$BOWTIE_PATH/bowtie -q -S -t -n 2 -e 200 --chunkmbs 256 -3 0 -5 16' 
 								' -m 1 -X 800 --allow-contain --best --strata hybrid_index'
 				 				' -1 ' + unzipped1 + ' -2 ' + unzipped2 +  ' $RESULTS_PATH/' + samfile + '\n')

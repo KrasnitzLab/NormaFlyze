@@ -23,7 +23,6 @@ def main():
 			if len(prevRead) == 0:
 				pass
 			else:
-				# if readLength > 57:
 				for pr in prevRead:
 					print pr
 				

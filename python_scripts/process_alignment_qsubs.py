@@ -7,7 +7,7 @@ import os
 
 def main():
 
-	project_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_SKBR3"
+	project_dir = "/mnt/wigclust1/data/safe/kostic/SNS_data_2"
 	bash_dir = "/mnt/wigclust1/data/safe/kostic/scripts/aligners"
 
 	for file in os.listdir(project_dir):
@@ -26,7 +26,7 @@ def main():
 			QSUB.write(header)
 
 			paths = ('export BOWTIE_PATH=/mnt/wigclust1/data/safe/kostic/bowtie-1.2.1.1' 
-							'\nexport DATA_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_SKBR3' 
+							'\nexport DATA_PATH=/mnt/wigclust1/data/safe/kostic/SNS_data_2' 
 							'\nexport PYTHON_PATH=/mnt/wigclust1/data/safe/kostic/python_scripts'
 							'\nexport SAM_PATH=/mnt/wigclust1/data/software/samtools/samtools-0.1.19'
 							'\ncd $DATA_PATH \n')
@@ -52,11 +52,6 @@ def main():
 			os.system(thisCommand)
 			thisCommand = "qsub " + qsubFile
 			os.system(thisCommand)
-
-
-			#'\n$SAM_PATH/samtools view -h -o ' + fname + '_tagged.sam ' + fname + '_tagged.bam\n'
-
-
 
 
 if __name__ == "__main__":
