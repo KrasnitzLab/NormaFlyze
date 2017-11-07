@@ -23,13 +23,13 @@ python $PYTHON_PATH/chrom_sizes.py $GENOME_PATH chrom_sizes_hg_dm_combined_conse
 $SAM_PATH/samtools view -bhS paired_7_13.sam | $SAM_PATH/samtools sort -n - paired_sorted_7_13
 
 #only keep alignments that fall within your data range as determined by ___
-$SAM_PATH/samtools view paired_sorted_7_13.bam | awk '($9 >= 150 && $9 <= 500) || ($9 <= -150 && $9 >= -500)' - > ps_data_lim_150_500.sam
+$SAM_PATH/samtools view paired_sorted_7_13.bam | awk '($9 >= 125 && $9 <= 600) || ($9 <= -125 && $9 >= -600)' - > ps_data_lim_125_600.sam
 
 #output = .bed file containing all alignments on each chromosome; .txt file containing the number of these alignments for each chromosome
-python $PYTHON_PATH/get_goodzones.py ps_data_lim_150_500.sam
+python $PYTHON_PATH/get_goodzones.py ps_data_lim_125_600.sam
 
 #sort in lexicographic order
-sort -k 1,1 -k 2,2n hybrid_unique_mappers_07_28.bed > sorted_mappers_150_500.bed
+sort -k 1,1 -k 2,2n hybrid_unique_mappers_07_27.bed > sorted_mappers_125_600.bed
 
 #arg 1 = hybrid_num_mappable.txt ; arg 2 = sorted_mappers.bed ; arg 3 = chromosome sizes file ; arg 4 = the location for the output file
 #arg 2 must be in lex order (chr1,10,11,12,13,14,15,16,17,18,19,2,20,21,22,2l,2r,3,3l,3r,4,4_dm,etc)
