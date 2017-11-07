@@ -1,8 +1,5 @@
 
 library("DNAcopy", lib.loc="/mnt/wigclust5/data/safe/kendall/DNAcopy_1.50.1")
-# for each gc/len bin i, sum up bin counts across all the genomic bins b --> ni
-# for each gc/len bin i, find pi
-# p_i = (n_i + 1)/(Sum_j n_j + 100), sumj nj is the sum of counts for all gc/len bins
 
 segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha, nperm, undo.SD, min.width){
 
@@ -12,13 +9,6 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 	quantiles <- nrow(thisUber) / genomic_bins
 
 	thisUberSeg <- data.frame(matrix(0, nrow = genomic_bins, ncol = ncol(thisUber)))
-
-	#holds the difference between seg and non seg
-	#mn_diff <- thisUber[1:2,]
-
-	#rep(seq_len(nrow(bins)), each=quantiles),]
-	#bins.expanded <- bins[rep(seq_len(nrow(bins)), each=quantiles),]
-	#rep(row.names(bins), quantiles),]
 
 	chrom.numeric <- substring(bins[,1], 4)
 	chrom.numeric[which(bins[,1] == "chrX")] <- "23"
@@ -56,7 +46,6 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 			}
 		}
 
-# these things are all important things for removal	
 		nj_zero <- which(pj_list == 0)
 		end <- nrow(thisUber)
 
@@ -68,7 +57,6 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 		thisUberEdit <- thisUber[-remove,i]
 		pj_list <- pj_list[-nj_zero]
 		new_quantiles <- length(pj_list)
-		#thisUberEdit <- thisUber[,i]
 
 		#for each genomic bin (so each set of 100 consecutive rows)
 		for (b in 1:genomic_bins){
@@ -90,11 +78,6 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 		start_dm <- min(which(chrom.numeric== "25"))
 		end_dm_auto <- max(which(chrom.numeric=="29"))
 
-		# print(mean(N_ratio[1:new_end_hg_auto]))
-		# print(mean(N_ratio[new_end_hg_auto:start_dm]))
-		# print(mean(N_ratio[start_dm:end_dm_auto]))
-		# print(mean(N_ratio[end_dm_auto:length(N_counts)]))
-
 		set.seed(25) 
 		CNA.object <- CNA(N_ratio, chrom.numeric, bin.start.pos, data.type="logratio", sampleid=dimnames(thisUber)[[2]][i]) 
 		smoothed.CNA.object <- smooth.CNA(CNA.object) 
@@ -110,18 +93,8 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 			prevEnd = thisEnd
 		}
 
-		print(length(thisUberEdit))
-		print(sum(thisUberEdit))
-		print(sum(thisShort$num.mark))
-		print(mean(m[1:new_end_hg_auto,1]))
-		print(mean(m[new_end_hg_auto:start_dm,1]))
-		print(mean(m[start_dm:end_dm_auto,1]))
-		print(mean(m[end_dm_auto:length(N_counts),1]))
-
 		thisUberSeg[, i] <- m[, 1]
 		diff <- abs(thisUberSeg[, i] - N_ratio)
-
-		#mn_diff[1,i] <- median(diff)
 
 		chr <- chrom.numeric
 		chr.shift <- c(chr[-1], chr[length(chr)])
@@ -185,15 +158,9 @@ segment_uber_hg19dm6_quantile <- function(outdir, indir, varbin, thisUber, alpha
 		mtext(chr.text, at = chr.at)
 		dev.off()
 	}
-	#print(mean(mn_diff[1,]))
 }
 
 df <- read.table("/mnt/wigclust1/data/safe/kostic/SNS_data_2/GClen_uber_10by10_count_data.txt", sep="\t", header=T, as.is=T, stringsAsFactors=F)
 uber_counts_nla3_quantile <- df[,-c(12,13,16,17)]
-#uber_counts_nla3_quantile <- read.table("/mnt/wigclust1/data/safe/kostic/SNS_data_2/sim_hybrid_quantile_uber.txt", sep="\t", header=T, as.is=T, stringsAsFactors=F)
-# 10 by 10 quantile uber : GClen_uber_varbin_count_data.txt
-# simulated uber : sim_hybrid_quantile_uber.txt
-# 5 by 5 quantile uber: GClen_uber_5by5_count_data.txt
-
 uber_counts_mat <- as.matrix(uber_counts_nla3_quantile)
 nla3.88.results <- segment_uber_hg19dm6_quantile(outdir="/mnt/wigclust1/data/safe/kostic/SNS_data_2", indir="", varbin="/mnt/wigclust1/data/safe/kostic/bin_mapping/range125_600_GC.txt", thisUber=uber_counts_mat, alpha=0.02, nperm=1000, undo.SD=0.5, min.width=3)

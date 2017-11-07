@@ -14,12 +14,7 @@ def main():
 
 	chrominfo = fileToDictionary("/mnt/wigclust1/data/safe/kostic/bin_mapping/chrom_sizes_hg_dm_combined_consecutive.txt", 0)
 	bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/hybrid_bin_boundaries_sorted_125_600.txt", 0)
-		#hybrid_bin_boundaries_sorted_125_600.txt", 0)
-		#hg19_bin_boundaries_sorted_125_600.txt", 0)
 	GC_bins = fileToArray("/mnt/wigclust1/data/safe/kostic/bin_mapping/GC_bin_bounds_125_600.txt", 0)
-		#10by10quantiles.txt",0)
-		#GC_bin_bounds_125_600_hg19.txt", 0)
-		#GC_bin_bounds_125_600.txt", 0) 
 
 	INFILE = open(infilename, "r")
 	OUTFILE = open(outfilename, "w")
@@ -143,8 +138,6 @@ def main():
 
 		binCounts[indexGenome-1][gcIndex-1][lenIndex-1] += 1
 
-	###### end for line in the sam file
-	#print("starting to add to output file")
 	for p in range(len(binCounts)):
 		for q in range(len(binCounts[p])):
 			for r in range(len(binCounts[p][q])):
@@ -169,10 +162,8 @@ def main():
 	STATFILE.write("\t")
 	STATFILE.write(str(notinrange))
 	STATFILE.write("\t")
-	#print("final fly: " + str(float(flyNLA)/float(flycount)))
 	STATFILE.write(str(float(flycount-1)/float(flyNLA + flycount - 1)))
 	STATFILE.write("\t")
-	#print("final hum: " + str(float(humanNLA/humancount)))
 	STATFILE.write(str(float(humancount-1)/float(humanNLA + humancount - 1)))
 	STATFILE.write("\n")
 

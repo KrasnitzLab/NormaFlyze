@@ -32,7 +32,6 @@ def main():
 							'\ncd $DATA_PATH \n')
 			QSUB.write(paths)
 
-			###### dont sort????? ###########
 			command = ('sort -k3,3 -k1,1 <( $SAM_PATH/samtools view ' + f +' ) > '+ fname +'_sorted.sam\n'
 					 + 'python $PYTHON_PATH/compute_frag_gc_content.py '+ fname + '_sorted.sam $GENOME_PATH ' + fname +'_GCadded.sam\n')
 
@@ -43,7 +42,6 @@ def main():
 						' ' + fname + '_varbinGC_10by10_count.txt ' + fname + '_varbinGC_10by10_stats.txt\n')
 			QSUB.write(command)
 
-			#"sort -k6,6 -k4,4 " + fname + "_varbinGC_count.txt"
 			print(qsubFile)
 			QSUB.close()
 
