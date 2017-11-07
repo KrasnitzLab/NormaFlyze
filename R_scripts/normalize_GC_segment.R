@@ -33,7 +33,8 @@ cbs.segment.uber01.hg19dm6 <- function(outdir, indir, varbin.gc, varbin.len, thi
 	chrom.numeric <- as.numeric(chrom.numeric)
 
 ########################
-
+	
+	hg_auto_end <- max(which(chrom.numeric=="22"))
 	flyStart <- min(which(chrom.numeric=="25"))
 
 	thisUberRatio <- thisUber
@@ -42,6 +43,7 @@ cbs.segment.uber01.hg19dm6 <- function(outdir, indir, varbin.gc, varbin.len, thi
 	thisUberSegQuantal <- thisUber
 
 #######################
+	mn_diff <- thisUber[1:2,]
 
 	for (i in 1:ncol(thisUber)) {
 		sample.name <- dimnames(thisUber)[[2]][i]
@@ -49,13 +51,14 @@ cbs.segment.uber01.hg19dm6 <- function(outdir, indir, varbin.gc, varbin.len, thi
 		
 		#get the column at i
 		thisBincount <- thisUber[, i] + 1
+		print(thisBincount)
 		thisRatio <- thisBincount / mean(thisBincount)
 		####normalize for GC content and median bin fragment length
 		thisLowratio_1 <- lowess.gc(gc$gc.content, thisRatio)
 		thisLowratio <- lowess.norm(lengths$median.len, thisLowratio_1, flyStart)
 		thisUberRatio[, i] <- thisLowratio
 
-		cat("thisLowratio stats: ", min(thisLowratio), max(thisLowratio), mean(thisLowratio), "\n")
+		#cat("thisLowratio stats: ", min(thisLowratio), max(thisLowratio), mean(thisLowratio), "\n")
 
 		set.seed(25) 
 		CNA.object <- CNA(log(thisLowratio), chrom.numeric, gc$bin.start.chrompos, data.type="logratio", sampleid=dimnames(thisUber)[[2]][i]) 
@@ -73,7 +76,11 @@ cbs.segment.uber01.hg19dm6 <- function(outdir, indir, varbin.gc, varbin.len, thi
 		}
 		thisUberSeg[, i] <- m[, 1]
 
-		cat("thisUberseg stats: ", min(thisUberSeg[, i]), max(thisUberSeg[, i]), mean(thisUberSeg[, i]), "\n")
+		diff <- abs(thisUberSeg[, i] - thisLowratio_1)
+		mn_diff[1,i] <- median(diff)
+		diff <- abs(thisUberSeg[, i] - thisLowratio)
+		mn_diff[2,i] <- median(diff)
+		#cat("thisUberseg stats: ", min(thisUberSeg[, i]), max(thisUberSeg[, i]), mean(thisUberSeg[, i]), "\n")
 
 		chr <- chrom.numeric
 		chr.shift <- c(chr[-1], chr[length(chr)])
@@ -86,20 +93,21 @@ cbs.segment.uber01.hg19dm6 <- function(outdir, indir, varbin.gc, varbin.len, thi
 		x.labels <- c("0", "0.5", "1.0", "1.5", "2.0", "2.5", "3.0")
 
 		# makes the graph of the non-scaled data
-		png(paste(outdir, "/", sample.name, ".5k.len.norm.png", sep=""), height=800, width=1200)
-		plot(x=abspos.col, y=thisLowratio, ylim=c(0,6), main=paste(sample.name, ""), xaxt="n", xlab="Genome Position Gb", ylab="Ratio", col="#CCCCCC")
-		axis(1, at=x.at, labels=x.labels)
-		lines(x=abspos.col, y=thisLowratio, col="#CCCCCC")
-		points(x=abspos.col, y=thisUberSeg[, i], col="#0000AA")
-		lines(x=abspos.col, y=thisUberSeg[, i], col="#0000AA")
-		abline(h=hlines)
-		abline(v=vlines)
-		mtext(chr.text, at = chr.at)
-		dev.off()
+		# png(paste(outdir, "/", sample.name, ".hybrid.norm.png", sep=""), height=800, width=1200)
+		# #.5k.len.norm.png
+		# plot(x=abspos.col, y=thisLowratio, ylim=c(0,6), main=paste(sample.name, ""), xaxt="n", xlab="Genome Position Gb", ylab="Ratio", col="#CCCCCC")
+		# axis(1, at=x.at, labels=x.labels)
+		# lines(x=abspos.col, y=thisLowratio, col="#CCCCCC")
+		# points(x=abspos.col, y=thisUberSeg[, i], col="#0000AA")
+		# lines(x=abspos.col, y=thisUberSeg[, i], col="#0000AA")
+		# abline(h=hlines)
+		# abline(v=vlines)
+		# mtext(chr.text, at = chr.at)
+		# dev.off()
 		
-		#get multiplier by minimizing the residuals
+		#get multiplier by minimizing the residuals; use of the human autosomal portion to determine
 		thisGrid <- seq(1.5, 5.5, by=0.05)
-		thisOuter <- thisUberSeg[, i] %o% thisGrid
+		thisOuter <- thisUberSeg[1:hg_auto_end, i] %o% thisGrid
 		thisOuterRound <- round(thisOuter)
 		thisOuterDiff <- (thisOuter - thisOuterRound) ^ 2
 		thisOuterColsums <- colSums(thisOuterDiff, na.rm = FALSE, dims = 1)
@@ -115,21 +123,26 @@ cbs.segment.uber01.hg19dm6 <- function(outdir, indir, varbin.gc, varbin.len, thi
 	
 		hlines <- c(0, 1, 2, 3, 4, 5, 6)
 		
-		png(paste(outdir, "/", sample.name, ".5k.GC_length_loess.png", sep=""), height=800, width=1200)
-		plot(x=abspos.col, y=thisLowratioQuantal, ylim=c(0,10), main=paste(sample.name, ""), xaxt="n", xlab="Genome Position Gb", ylab="Ratio", col="#CCCCCC")
-		axis(1, at=x.at, labels=x.labels)
-		lines(x=abspos.col, y=thisLowratioQuantal, col="#CCCCCC")
-		points(x=abspos.col, y=thisSegQuantal, col="#0000AA")
-		lines(x=abspos.col, y=thisSegQuantal, col="#0000AA")
-		abline(h=hlines)
-		abline(v=vlines)
-		mtext(chr.text, at = chr.at)
-		dev.off()
+		# png(paste(outdir, "/", sample.name, ".5k.GC_length_loess.png", sep=""), height=800, width=1200)
+		# plot(x=abspos.col, y=thisLowratioQuantal, ylim=c(0,10), main=paste(sample.name, ""), xaxt="n", xlab="Genome Position Gb", ylab="Ratio", col="#CCCCCC")
+		# axis(1, at=x.at, labels=x.labels)
+		# lines(x=abspos.col, y=thisLowratioQuantal, col="#CCCCCC")
+		# points(x=abspos.col, y=thisSegQuantal, col="#0000AA")
+		# lines(x=abspos.col, y=thisSegQuantal, col="#0000AA")
+		# abline(h=hlines)
+		# abline(v=vlines)
+		# mtext(chr.text, at = chr.at)
+		# dev.off()
 
-		thisRatioOut <- data.frame(gc[, 1:3], "bincount"=thisBincount, "ratio" = thisRatio, "gc.content" = gc$gc.content, "lowratio" = thisLowratio, "seg.mean.LOWESS" = thisUberSeg[, i], "ratio.quantal" = thisLowratioQuantal, "seg.quantal" = thisSegQuantal)
-		write.table(thisRatioOut, sep="\t", file=paste(outdir, "/", sample.name, ".hg19dm6.varbin.data.txt", sep=""), quote=F, row.names=F)
+		# thisRatioOut <- data.frame(gc[, 1:3], "bincount"=thisBincount, "ratio" = thisRatio, "gc.content" = gc$gc.content, "lowratio" = thisLowratio, "seg.mean.LOWESS" = thisUberSeg[, i], "ratio.quantal" = thisLowratioQuantal, "seg.quantal" = thisSegQuantal)
+		# write.table(thisRatioOut, sep="\t", file=paste(outdir, "/", sample.name, ".hg19dm6.varbin.data.txt", sep=""), quote=F, row.names=F)
 
 	}
+	print(mn_diff[,1:11])
+	print( mn_diff[,14:15])
+
+	print(mean(c(mn_diff[1,1:11], mn_diff[1,14:15])))
+	print(mean(c(mn_diff[2,1:11], mn_diff[2,14:15])))
 
 	return(list(thisUberRatio, thisUberRatioQuantal, thisUberSeg, thisUberSegQuantal))
 }
@@ -138,5 +151,7 @@ cbs.segment.uber01.hg19dm6 <- function(outdir, indir, varbin.gc, varbin.len, thi
 a.varbin <- read.table("/mnt/wigclust1/data/safe/kostic/SNS_data_2/b15_5_varbin_count.txt", sep="\t", header=F, as.is=T, stringsAsFactors=F)
 #####change file to one with correct date
 uber.ratio.nla3.88 <- read.table("/mnt/wigclust1/data/safe/kostic/SNS_data_2/range125_600_uber_varbin_count_data.txt", sep="\t", header=T, as.is=T, stringsAsFactors=F)
+#using all the ubers
+#range125_600_uber_varbin_count_data.txt
 nla3.88.count.mat <- as.matrix(uber.ratio.nla3.88)
 nla3.88.results <- cbs.segment.uber01.hg19dm6(outdir="/mnt/wigclust1/data/safe/kostic/SNS_data_2", indir="", varbin.gc="/mnt/wigclust1/data/safe/kostic/bin_mapping/range125_600_GC.txt", varbin.len = "/mnt/wigclust1/data/safe/kostic/bin_mapping/range125_600_LEN.txt", thisUber=nla3.88.count.mat, abspos.col=a.varbin$V3, alpha=0.02, nperm=1000, undo.SD=0.5, min.width=3)
