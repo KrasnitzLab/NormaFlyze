@@ -1,0 +1,43 @@
+-------- Data processing pipeline --------
+
+Sequencing data is given to us as one large zipped FASTQ file. Each set of data may have different varietal tags and barcodes, making processing very specific to each data set. So, we start our specification after the single FASTQ file is broken into pairs of FASTQ files, one pair for each well sample. The pairs are separated into subdirectories based on barcodes. 
+The final result of the processing is one .bam file for each well in the experiment, with varietal tags added to sequences.
+Note that much of this processing is specific to our experimental process. The overarching goal is to take paired-end fastq files and align them using Bowtie to output a single sam or bam file for each well.
+
+
+A) Align each sample pair to the genome and process the alignment files
+	(1) [make_alignment_qsubs.py] 
+		(2) [remove_seq_adapter.py]  
+	(3) [process_alignment_qsubs.py] 
+		(4) [add_varietal_tag_paired.py] 
+
+
+-------- Method specifications ------------------------------
+
+(1) [make_alignment_qsubs.py] creates scripts that remove part of an adapter sequence and align the sequences to the reference genome using Bowtie paired-end alignment. 
+	Run: <python make_alignment_qsubs.py>
+	Inputs: None
+	Outputs: A bash file for each pair of fastq files; the bash script outputs .sam alignment files for each pair of fastq files.
+	Dependencies: directory containing subdirectories that contain paired, zipped fastq files; (2)
+	Note: In line 46, the Bowtie alignment command is written with the [-5 16] parameter, which exculdes 16 bases from the 5' end of the sequence. This is specific to how our data was created, so we may want to exclude the [-3 0 -5 16] parameters
+
+(2) [remove_seq_adapter.py] removes the specified adapter sequence for reads shorter than 150 bp. 
+	Run: < seqs.fq | python remove_seq_adapter.py DNAseq >
+	Inputs: 1 - an unzipped fastq file, passed in as standard input
+			2 - the string to be removed from each sequence in the input
+	Output: a fastq file with the sequence removed, output to stardard output.
+	Note:	This is specific to how our DNA segments were created and sequenced; probably exculde this
+
+(3)	[process_alignment_qsubs.py] creates scripts to modify each alignment file in a directory
+	Run: <python process_alignment_qsubs.py>
+	Inputs: none
+	Outputs: A bash script for each alignment .sam file; the bash scripts output tagged .sam alignment files
+	Dependendies: The original fastq file pairs for each alignment .sam file being examined; (4)
+
+(4) [add_varietal_tag_paired.py] adds varietal tags to each alignment in a sam file
+	Run: <python add_varietal_tag_paired.py fastq1 fastq2 samfile>
+	Inputs: 1 - fastq1 is one of the paired-end sequence files that corresponds to the alignments in samfile
+			2 - fastq2 is the other paired-end sequence file  that corresponds to samfile
+			3 - samfile is an alignment file given by (1)
+	Outputs: A bam file for the samfile given, with appropriate varietal tags added to each sequence
+	Note: Our varietal tags are very specific to our sequences, so this step may need to be excluded as well.
