@@ -1,4 +1,4 @@
--------- Quantile normalization pipeline for for hybrid genome --------
+-------- Quantile normalization pipeline for hybrid genome --------
 
 A) 	Determine the GC/length quantiles
 	(1) [get_GC_len_bin_bounds.sh]
@@ -11,13 +11,14 @@ B)	Process sequencing data: see "processing_pipeline.txt"
 
 C)	Count processed data into bins
 	(6) [get_bin_counts_GC_qsubs.py]
-		(7) [count_and_dedup_GC.py]
+		(7) [compute_frag_gc_content.py]
+		(8) [count_and_dedup_GC.py]
 
 D)	Combine counts for multiple samples
-	(8) [combine_GC_varbin.py]
+	(9) [combine_GC_varbin.py]
 
 E)	Normalize bin counts and plot profiles
-	(9) [quantile_norm.R]
+	(10) [quantile_norm.R]
 
 -------- Method specifications ------------------------------
 
@@ -31,7 +32,7 @@ E)	Normalize bin counts and plot profiles
 (2)	[chrom_sizes.py] creates a file containing each chromosome’s length
 	Run: <python chrom_sized.py genome_path output_name.txt>
 	Inputs: 1 - the directory containing the chromosome fastq files for the genome being examined; each chromosome should be separated into its own file. 
-		2 - the name of the file to be outputted
+			2 - the name of the file to be outputted
 	Outputs: a text file with 3 columns; 1st col is chromsome name, 2nd col is the length of the chromosome, 3rd is the relative start position of that chromosome in the entire genome. Chromsomes are sorted numerically.
 	Dependencies: directory containing the chromosome fastq files
 
@@ -39,48 +40,59 @@ E)	Normalize bin counts and plot profiles
 	Run: <python get_goodzones.py alignmentdata.sam>
 	Inputs: alignmentdata.sam, a paired-end alignment file
 	Outputs: 1 - A .bed file containing all alignments, sorted by chromosome. First column is chrom name, 2nd is starting pos of that alignment on the chrom, 3rd is the ending pos of that alignment on the chrom. Sorted numerically by chromosome. 
-		2 - Text file with the number of alignments per chromosome
+			2 - Text file with the number of alignments per chromosome
 	Dependencies: None
 
 (4)	[compute_quantile_gc_content.py]
 	Run: <python compute_quantile_gc_content.py uniquemappers.bed genome_path uniquemappers_with_GC_output.txt>
 	Inputs: 1 - The .bed file from (3). 
-		2 - The path to the directory containing the chromosome fastq files. 
-		3 - Name of output file
+			2 - The path to the directory containing the chromosome fastq files. 
+			3 - Name of output file
 	Output: File identical to input 1, with GC content of each fragment added as a 4th column
 	Dependencies: directory containing the chromosome fastq files
 
 (5)	[sep_GC_len_bin_bounds.py]
 	Run: <python sep_GC_len_bin_bounds.py chrom_size.txt uniquemappers_with_GC.txt GCbinbounds_output.txt>
 	Inputs: 1 - File containing chrom sizes; output of (2).
-		2 - File of unique mappers on each chrom, with GC content; output of (4).
-		3 - Name of output file
+			2 - File of unique mappers on each chrom, with GC content; output of (4).
+			3 - Name of output file
 	Output: Text file containing the GC/length bin bounds. Columns are as follows - GC quantile start value, GC quantile end value, length quantile start, length quantile end, number of fragments that fall into that quantile. 
 	Note: We used 100 quantiles (10 GC, 10 length). The number of quantiles is set in lines 12 and 13.
+
 
 (6)	[get_bin_counts_GC_qsubs.py]
 	Run: <python get_bin_counts_GC_qsubs.py>
 	Inputs: None
 	Outputs: A bash script for each alignment file in the directory examined
-	Dependencies: A directory containing processed .bam files
+	Dependencies: A directory containing processed .bam files, (7), (8)
 
-(7)	[count_and_dedup_GC.py]
+(7)	[compute_frag_gc_content.py] adds a tag for GC content to each alignment in a sam file
+	Run: <python compute_frag_gc_content.py samfile.sam GENOME_PATH outfile.sam>
+	Inputs: 
+		1 - SAM alignment file for paired-end reads. Pairs next to each other, whole file sorted by chromosome
+		2 - directory where genome fastq files are (one for each chromosomes)
+		3 - name of output file
+	output:
+		- SAM file with a GC content tag added.
+
+
+(8)	[count_and_dedup_GC.py]
 	Run: <python count_and_dedup_GC.py alignment_GCadded.sam count_output.txt stats_output.txt>
 	Inputs: 1 - A .sam alignment file with GC content of each fragment added as a tag.
-		2 - the name of the output file containing counts for each quantile bin
-		3 - the name of the output file containing statistics about the counts
+			2 - the name of the output file containing counts for each quantile bin
+			3 - the name of the output file containing statistics about the counts
 	Output: 1 - File containing counts for each quantile bin. Columns are as follows - chrom name, chromosome start position of genomic bin, absolute start position of genomic bin, start GC, end GC, start len, end len, bin count for GC/len quantile, total count for genomic bin
-		2 - File containing statistics. Format as follows - TotalReads, DupsRemoved, ReadsKept, ReadsOutofRange, ...(other unused values)
+			2 - File containing statistics. Format as follows - TotalReads, DupsRemoved, ReadsKept, ReadsOutofRange, ...(other unused values)
 	Dependencies: A file containing chromomsome sizes; output of (2); hardcoded at line 15. A file of genome bin boundaries; hardcoded at line 16. A file of GC/length quantile boundaries; output of (5)
 
-(8) [combine_GC_varbin.py]
+(9) [combine_GC_varbin.py]
 	Run: <python combine_GC_varbin.py>
 	Inputs: none
 	Outputs: An "uber" file with one column for each alignment file's count data from (7).
 	Dependencies: A "guide" file with information about sample names, which samples are being examined, etc (see supplementary_data.txt)
 	Note: The names of files to be combined are determined based on the guide and one what we named the count files from (7). Names of files to open are determined at lines 29 and 33.
 
-(9)	[quantile_norm.R]
+(10)[quantile_norm.R]
 	Run: </usr/bin/R CMD BATCH quantile_norm.R>
 	Inputs: None
 	Outputs: A .png profile plot for each sample in the "uber" count file. 
