@@ -1,0 +1,131 @@
+Legend
+
+------------------------To be added to pipeline: creating Bowtie index, simulating reads and paired-end alignment-----------------------------------------------
+
+1) make_hybrid_index.sh 									(Normaflyze/scripts)
+info: creates the Bowtie index for the reference genome
+
+	a) hg19_mask_Y.py - **same as hg19.chrY.psr.py**		(Normaflyze/python_scripts)
+	input: 
+		- the .fa file of the hg19 Y chromosome
+		- the name of the modified file to be output
+	output:
+		- fasta file for a modified Y chromosome; pseudoautosomal regions removed
+
+	b) sep_drosoph_genome.py 								(Normaflyze/python_scripts)
+	inputs:
+		- a single large fasta file containing all chromosomes
+		- the destination where the new files should be placed
+	output:
+		- several fasta files, separated by each chromosome in the input file.
+
+
+2) generate_paired_reads.sh 								(Normaflyze/scripts)
+info: creates fastq files, formatted for pair-end read alignment. Applied to hybrid reference genome, using Nla3 cutsites and read lengths of 150.
+
+	a) generate_paired_reads.py 							(Normaflyze/python_scripts)
+	input:
+		- path to the reference genome being used. The directory must only contain .fa files, with one for each chromosome in the reference genome.
+		- the desired length of reads
+		- the cut site where reads start (Nla3 in this case)
+	output:
+		- 2 files formatted as FASTQ paired end read files
+		- 1 text file containing fragment lengths
+
+
+3) map_paired_fastq.sh 										(Normaflyze/scripts)
+info: calls Bowtie aligner on paired-end fastq files. Outputs SAM alignment
+
+
+---------------------aligning/processing real data for use in bin boundary calculation-----------------------------------------------
+
+see processing_pipeline.txt for more details on this
+
+4) make_alignment_qsubs.py
+info: makes a script for aligning each pair of fastq files from real data. 
+runs qsub on each, outputs a SAM alignment file for each pair of fastq files
+
+
+5) frag_len_distrib.py
+info: gets the fragment lengths for fly and human-aligned fragments in each SAM file outputted by the alignment qsubs.
+input:
+	- the directory holding all the SAM files
+output:
+	- a file for each SAM file, containing the legnth of each fragment. Not sorted.
+
+---------------------get bin boundaries, old normalization method------------------------------------------------------------------------------
+
+
+6) get_bin_bounds.sh (old normalization method)
+info: creates 5000 bins for the hybrid reference genome. 
+Removes theoretical alignments for fragments that dont fall within a certain range given by frag_len_distrib.py (this is hardcoded in, but perhaps should take the info from the file itself)
+calls: chrom_sizes.py, get_goodzones.py, sep_bin_boundaries.py
+
+	a) chrom_sizes.py
+	input:
+		- path to the hybrid genome
+		- the desired name of the output file
+	output:
+		- text file containing chrom names, absolute start positions, and lengths; sorted by absolute position, with all hg19 first then all dm6
+
+	b) get_goodzones.py
+	input:
+		- the SAM alignment file for the simulated paired-end reads
+	output:
+		- a .bed file containing every alignment - chromsome, absolute start position of alignment, and abs end position of alignment
+		- a text file containing each chromosome and the number of fragments that are mapped to that chromosome
+
+	c) sep_bin_boundaries.py (old normalization method)
+	input:
+		- the txt file containg # of alignments per chromosome (from get_goodzones.py)
+		- the .bed file containing all alignments (from get_goodzones.py). must be sorted in lexicographic order by chromosome name, then by position.
+		- the file containing the sizes of each chromosome.
+		- destination where the bin boundary output will be placed
+	output:
+		- a text file containing the bin boundaries for the hybrid genome: chromosome, chrom bin  pos, absolute bin start pos, chrom bin end, bin length, number of reads mapping to the bin 
+	other: currently the 5000 bin value is hardcoded, but maybe should be an input for user to determine?
+
+10) compute_gc_content.sh (old normalization method)
+info: computes the gc content and median fragment length for each bin
+	a) compute_gc_content.py
+	b) compute_len_distrib.py
+
+----------------------------bin boundaries for new normalization method--------------------------
+
+see quantile_pipeline.txt for more details.
+
+11) get_GC_len_bin_bounds.sh
+	a) chrome_sizes.py (same as #6a)
+	b) get_goodzones.py (same as #6b)
+	c) compute_frag_gc_content.py
+
+	d) sep_GC_len_bin_bounds.py
+	inputs:
+		- the chromosome length file
+		- file containing the GC content of each fragment
+		- name of the output file
+	output:
+		- file containing 100 bins based on fragment GC content and length
+
+---------------------------for real data---------------------------------------------
+
+13) make_alignment_qsubs.py
+described above in #4
+
+14) process_alignment_qsubs.py
+info: creates script for each SAM alignment file in the given directory that sorts and adds varietal tags to each
+
+----------------------for old normalization method-------------------------------------
+
+15) get_bin_counts_qsubs.py
+
+16) count_and_dedup.py
+
+17) combine_varbin_data.py
+
+18) normalize_GC_segment.R
+
+-------------------for new normalization method, real data------------------------
+
+see quantile_pipeline.txt
+
