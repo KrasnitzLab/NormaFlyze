@@ -1,0 +1,104 @@
+---------- old normalization -------------------------------
+
+(A)	Partition the genome into a set number of bins, such that each bin contains the same number of aligned simulated fragments
+	(1) [get_bin_bounds.sh]
+		(2) [chrom_sizes.py]
+		(3) [get_goodzones.py] 
+		(4) [sep_bin_boundaries.py]
+
+(B)	Calculate the  GC content and median fragment length for each bin
+	(5) [compute_gc_content.sh]
+		(6) [compute_gc_content.py]
+		(7) [compute_len_distrib.py]
+
+(C)	Process sequencing data: see "processing_pipeline.txt"
+
+(D)	Count the data samples into genomic bins
+	(8) [get_bin_counts_qsubs.py]
+		(9) [count_and_dedup.py]
+
+(E)	Combine counts for multiple samples
+	(10) [combine_varbin_data.py]
+
+(F)	Normalize bin counts and plot profiles
+	(11) [normalize_GC_segment.R]
+
+
+--------- Method specifications ------------------------------
+
+(1) 	[get_bin_bounds.sh] creates 5000 bins for the hybrid reference genome. Removes theoretical alignments for fragments that dont fall within a certain range (this range should be an input, but is currently hardcoded)
+	Run: <qsub get_bin_bounds.sh>
+	Inputs: None
+	Outputs: file containing chromosome lengths, file of sorted unique mappers, file of number of alignments per chromosome, file of genomic bin boundaries
+	Dependencies: (2), (3), (4), SamTools software
+	
+(2)	[chrom_sizes.py] creates a file containing each chromosome’s length
+	Run: <python chrom_sized.py genome_path output_name.txt>
+	Inputs: 1 - the directory containing the chromosome fastq files for the genome being examined; each chromosome should be separated into its own file. 
+		2 - the name of the file to be outputted
+	Outputs: 1 - a text file with 3 columns; 1st col is chromosome name, 2nd col is the length of the chromosome, 3rd is the relative start position of that chromosome in the entire genome. Chromsomes are sorted numerically.
+	Dependencies: directory containing the chromosome fastq files
+
+
+(3) 	[get_goodzones.py] 
+	Run: <python get_goodzones.py alignmentdata.sam>
+	Inputs: alignmentdata.sam, a paired-end alignment file
+	Outputs: 1 - A .bed file containing all alignments, sorted by chromosome. First column is chrom name, 2nd is starting pos of that alignment on the chrom, 3rd is the ending pos of that alignment on the chrom. Sorted numerically by chromosome. 
+		2 - Text file with the number of alignments per chromosome
+	Dependencies: None
+
+
+(4) 	[sep_bin_boundaries.py]
+	Run: <python sep_bin_boundaries.py num_mappers.txt sorted_mappers.bed chrom_sizes.txt output_loc>
+	Inputs: 1 - the txt file output of (3) that contains the number of alignments per chromosome
+		2 - the .bed file output of (3) that contains all alignments. must be sorted in lexicographic order by chromosome name, then by position.
+		3 - the text file output of (2) containing chrom sizes
+		4 - the directory where the output should be written
+	Outputs: 1 - a text file containing the bin boundaries for the hybrid genome. Columns are: chromosome, chrom bin  pos, absolute bin start pos, chrom bin end, bin length, number of reads mapping to the bin 
+	Dependencies: 
+	Note: the number of bins to be created is currently hardcoded to 5000, but this should be an option
+
+
+(5) 	[compute_gc_content.sh]
+	Run: <qsub compute_gc_content.sh>
+	Inputs: None
+	Outputs: 1 - A text file containing GC content values for each chromosome
+		2 - A text file containing the median fragment length for each chrosome
+	Dependencies: directory containing all the chromosome fastq files
+
+(6) 	[compute_gc_content.py]
+	Run: <python compute_gc_content.py genome_dir >
+	Inputs:
+	Outputs:
+	Dependencies:
+
+(7) 	[compute_len_distrib.py]
+	Run:
+	Inputs:
+	Outputs:
+	Dependencies:
+
+(8) 	[get_bin_counts_qsubs.py]
+	Run:
+	Inputs:
+	Outputs:
+	Dependencies:
+
+(9) 	[count_and_dedup.py]
+	Run:
+	Inputs:
+	Outputs:
+	Dependencies:
+
+(10) 	[combine_varbin_data.py]
+	Run:
+	Inputs: None 
+	Outputs:
+	Dependencies:
+
+(11) 	[normalize_GC_segment.R]
+	Run: </usr/bin/R CMD BATCH normalize_GC_segment.R>
+	Inputs: None
+	Outputs: png files with the copy number profile for each sample in the "uber" file of all samples
+	Dependencies: 1 - "uber" file from (10)
+		2 - A file containing ...

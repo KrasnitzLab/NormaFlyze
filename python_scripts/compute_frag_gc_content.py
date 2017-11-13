@@ -61,12 +61,10 @@ def main():
 
 		fragment = y[(fragStart):(fragEnd+1)]
 		gcContent = float(len(re.findall("[CG]", fragment))) / float(len(re.findall("[ACGT]", y[(fragStart):(fragEnd+1)])))
-		nla3 = len(re.findall("\BCATG\B", fragment)) #+ len(re.findall("\BGTAC\B", fragment))
+		#nla3 = len(re.findall("\BCATG\B", fragment)) #+ len(re.findall("\BGTAC\B", fragment))
 		#len(re.findall("\ACATG", fragment)) + len(re.findall("CATG\Z", fragment)) + 
 		arow.append("GC:" + str(gcContent))
-		arow.append("NLA:" + str(nla3))
 		pairrow.append("GC:" + str(gcContent))
-		pairrow.append("NLA:" + str(nla3))
 
 
 		GC_content.write("\t".join(arow) + "\n")
