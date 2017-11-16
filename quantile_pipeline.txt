@@ -1,23 +1,26 @@
 -------- Quantile normalization pipeline for hybrid genome --------
 
-A) 	Determine the GC/length quantiles
+A)	Create reference genome and align theoretical fragments
+	See set_up_reference.txt
+
+B) 	Determine the GC/length quantiles
 	(1) [get_GC_len_bin_bounds.sh]
 		(2) [chrom_sizes.py]
 		(3) [get_goodzones.py]
 		(4) [compute_quantile_gc_content.py]
 		(5) [sep_GC_len_bin_bounds.py] 
 
-B)	Process sequencing data: see "processing_pipeline.txt"
+C)	Process sequencing data: see "processing_pipeline.txt"
 
-C)	Count processed data into bins
+D)	Count processed data into bins
 	(6) [get_bin_counts_GC_qsubs.py]
 		(7) [compute_frag_gc_content.py]
 		(8) [count_and_dedup_GC.py]
 
-D)	Combine counts for multiple samples
+E)	Combine counts for multiple samples
 	(9) [combine_GC_varbin.py]
 
-E)	Normalize bin counts and plot profiles
+F)	Normalize bin counts and plot profiles
 	(10) [quantile_norm.R]
 
 -------- Method specifications ------------------------------
@@ -27,18 +30,21 @@ E)	Normalize bin counts and plot profiles
 	Run: <qsub get_GC_len_bin_bounds.sh>
 	Inputs: None
 	Outputs: file containing chromosome lengths, file of unique mappers, file of genomic bins, file of GC/lenght quantiles
-	Dependencies: (2), (3), (4), directory containing the chromosome fastq files
+	Dependencies: 1 - the SAM alignment file for theortical fragments from (A)
+				2 - (2), (3), (4)
+				3 - directory containing the chromosome fasta files
+				4 - SAMTOOLS
 
 (2)	[chrom_sizes.py] creates a file containing each chromosome’s length
 	Run: <python chrom_sized.py genome_path output_name.txt>
-	Inputs: 1 - the directory containing the chromosome fastq files for the genome being examined; each chromosome should be separated into its own file. 
+	Inputs: 1 - the directory containing the chromosome fasta files for the genome being examined; each chromosome should be separated into its own file. 
 			2 - the name of the file to be outputted
 	Outputs: a text file with 3 columns; 1st col is chromsome name, 2nd col is the length of the chromosome, 3rd is the relative start position of that chromosome in the entire genome. Chromsomes are sorted numerically.
-	Dependencies: directory containing the chromosome fastq files
+	Dependencies: directory containing the chromosome fasta files
 
 (3) [get_goodzones.py] 
 	Run: <python get_goodzones.py alignmentdata.sam>
-	Inputs: alignmentdata.sam, a paired-end alignment file
+	Inputs: alignmentdata.sam, a paired-end alignment file from (A) with fragments outside a length range removed
 	Outputs: 1 - A .bed file containing all alignments, sorted by chromosome. First column is chrom name, 2nd is starting pos of that alignment on the chrom, 3rd is the ending pos of that alignment on the chrom. Sorted numerically by chromosome. 
 			2 - Text file with the number of alignments per chromosome
 	Dependencies: None
@@ -46,10 +52,10 @@ E)	Normalize bin counts and plot profiles
 (4)	[compute_quantile_gc_content.py]
 	Run: <python compute_quantile_gc_content.py uniquemappers.bed genome_path uniquemappers_with_GC_output.txt>
 	Inputs: 1 - The .bed file from (3). 
-			2 - The path to the directory containing the chromosome fastq files. 
+			2 - The path to the directory containing the chromosome fasta files. 
 			3 - Name of output file
 	Output: File identical to input 1, with GC content of each fragment added as a 4th column
-	Dependencies: directory containing the chromosome fastq files
+	Dependencies: directory containing the chromosome fasta files
 
 (5)	[sep_GC_len_bin_bounds.py]
 	Run: <python sep_GC_len_bin_bounds.py chrom_size.txt uniquemappers_with_GC.txt GCbinbounds_output.txt>
@@ -70,7 +76,7 @@ E)	Normalize bin counts and plot profiles
 	Run: <python compute_frag_gc_content.py samfile.sam GENOME_PATH outfile.sam>
 	Inputs: 
 		1 - SAM alignment file for paired-end reads. Pairs next to each other, whole file sorted by chromosome
-		2 - directory where genome fastq files are (one for each chromosomes)
+		2 - directory where genome fasta files are (one for each chromosomes)
 		3 - name of output file
 	output:
 		- SAM file with a GC content tag added.

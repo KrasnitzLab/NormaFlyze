@@ -1,26 +1,29 @@
 ---------- old normalization -------------------------------
 
-(A)	Partition the genome into a set number of bins, such that each bin contains the same number of aligned simulated fragments
+(A)	Create reference genome and theoretical fragments
+	See set_up_reference.txt
+
+(B)	Partition the genome into a set number of bins, such that each bin contains the same number of aligned simulated fragments
 	(1) [get_bin_bounds.sh]
 		(2) [chrom_sizes.py]
 		(3) [get_goodzones.py] 
 		(4) [sep_bin_boundaries.py]
 
-(B)	Calculate the  GC content and median fragment length for each bin
+(C)	Calculate the  GC content and median fragment length for each bin
 	(5) [compute_gc_content.sh]
 		(6) [compute_gc_content.py]
 		(7) [compute_len_distrib.py]
 
-(C)	Process sequencing data: see "processing_pipeline.txt"
+(D)	Process sequencing data: see "processing_pipeline.txt"
 
-(D)	Count the data samples into genomic bins
+(E)	Count the data samples into genomic bins
 	(8) [get_bin_counts_qsubs.py]
 		(9) [count_and_dedup.py]
 
-(E)	Combine counts for multiple samples
+(F)	Combine counts for multiple samples
 	(10) [combine_varbin_data.py]
 
-(F)	Normalize bin counts and plot profiles
+(G)	Normalize bin counts and plot profiles
 	(11) [normalize_GC_segment.R]
 
 
@@ -30,19 +33,22 @@
 	Run: <qsub get_bin_bounds.sh>
 	Inputs: None
 	Outputs: file containing chromosome lengths, file of sorted unique mappers, file of number of alignments per chromosome, file of genomic bin boundaries
-	Dependencies: (2), (3), (4), SamTools software
+	Dependencies: 1 - the SAM alignment file for theortical fragments from (A)
+				2 - (2), (3), (4)
+				3 - SamTools software
+				4 - directory containing the chromosome fasta files
 	
 (2)	[chrom_sizes.py] creates a file containing each chromosome’s length
 	Run: <python chrom_sized.py genome_path output_name.txt>
-	Inputs: 1 - the directory containing the chromosome fastq files for the genome being examined; each chromosome should be separated into its own file. 
+	Inputs: 1 - the directory containing the chromosome fasta files for the genome being examined; each chromosome should be separated into its own file. 
 		2 - the name of the file to be outputted
 	Outputs: 1 - a text file with 3 columns; 1st col is chromosome name, 2nd col is the length of the chromosome, 3rd is the relative start position of that chromosome in the entire genome. Chromsomes are sorted numerically.
-	Dependencies: directory containing the chromosome fastq files
+	Dependencies: directory containing the chromosome fasta files
 
 
 (3) 	[get_goodzones.py] 
 	Run: <python get_goodzones.py alignmentdata.sam>
-	Inputs: alignmentdata.sam, a paired-end alignment file
+	Inputs: alignmentdata.sam, a paired-end alignment file from (A) with fragments outside a length range removed
 	Outputs: 1 - A .bed file containing all alignments, sorted by chromosome. First column is chrom name, 2nd is starting pos of that alignment on the chrom, 3rd is the ending pos of that alignment on the chrom. Sorted numerically by chromosome. 
 		2 - Text file with the number of alignments per chromosome
 	Dependencies: None
@@ -64,7 +70,7 @@
 	Inputs: None
 	Outputs: 1 - A text file containing GC content values for each chromosome
 		2 - A text file containing the median fragment length for each chrosome
-	Dependencies: directory containing all the chromosome fastq files
+	Dependencies: directory containing all the chromosome fasta files
 
 (6) 	[compute_gc_content.py]
 	Run: <python compute_gc_content.py genome_dir >

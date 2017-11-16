@@ -1,0 +1,53 @@
+--------- Set up for normalization methods using paired-end alignment  ------------------
+
+(A)	Create a bowtie reference genome for the human/fly genome		
+	(1) [make_hybrid_index.sh]
+		(2)	[hg19_mask_Y.py]
+		(3)	[sep_drosoph_genome.py]
+
+(B)	Simulate paired reads that occur at a restriction enzyme's cut locations. Align to genome
+	(4) [generate_paired_reads.sh]
+		(5)	[generate_paired_reads.py]
+	(6) [map_paired_fastq.sh]
+
+----------- Method specifications --------------------------------------------------------
+
+(1)	[make_hybrid_index.sh] creates the Bowtie index for the hybrid reference genome
+	Run: <qsub make_hybrid_index.sh>
+	Inputs: None
+	Outputs: A Bowtie hybrid index
+	Dependencies: (2), (3), a directory containing the human and fly genomes, Bowtie software
+	Note: If not using hybrid genome, just build index for hg19 genome
+
+(2) [hg19_mask_Y.py] removes psuedoautosomal regions on hg19 Y chromosome
+	Run: <python hg19_mask_Y.py chrY.fa chrY_masked.fa>
+	Inputs: 1 - name of Y chromosome fasta file
+			2 - name of file to output the modified data to
+	Output: The Y chromosome fasta file with pseudoautosomal regions removed
+	Dependencies: None
+
+(3)	[sep_drosoph_genome.py] separates a single fasta file of genome into separate ones for each chromosome
+	Run: <python sep_drosoph_genome.py dm6genome.fa output_directory>
+	Inputs: 1 - the drosophila genome fasta file
+			2 - the directory to output the separated files to
+	Output: A fasta file for each chromosome in the provided genome, in the same directory as the initial genome
+	Note: the separated files are needed for (5)
+
+(4)	[generate_paired_reads.sh] creates 2 fastq files, formatted for pair-end read alignment. Applied to hybrid reference genome, using Nla3 cutsites and read lengths of 150.
+	Run: <qsub generate_paired_reads.sh>
+	Inputs: none
+	Outputs: 2 fastq files
+	Dependecies: (5)
+
+(5)	[generate_paired_reads.py] creates 2 fastq files containing paired-end reads for a certain restriction enzyme site and read length
+	Run: <python generate_paired_reads.py genome_dir len site>
+	Inputs: 1 - the directory containing the chromosome fasta files
+			2 - an integer representing the desired length of the paired-end reads
+			3 - a string representing a restriction enzyme cut site
+	Output: 1,2 - a pair of fastq files, formatting for paired-end alignment. Contain reads on length [len] that start/end at [site]
+
+(6) [map_paired_fastq.sh] aligns paired-end reads from (5) to the hybrid reference genome
+	Run: <qsub map_paired_fastq.sh>
+	Inputs: none
+	Outputs: a SAM alignment file for the provided fastq files
+	Dependencies: the paired-end fastq files output by (5), Bowtie software
